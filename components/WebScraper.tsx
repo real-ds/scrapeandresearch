@@ -3,11 +3,25 @@
 import { useState } from 'react';
 import ResultDisplay from './ResultDisplay';
 
+interface ApiResult {
+  status: string;
+  extracted_info?: string;
+  summary?: string;
+  citations?: Array<{
+    title: string;
+    authors: string;
+    year: string;
+    venue: string;
+    url: string;
+  }>;
+  source_url?: string;
+}
+
 export default function WebScraper() {
   const [url, setUrl] = useState('');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<ApiResult | null>(null);
   const [error, setError] = useState('');
 
   const handleScrape = async (e: React.FormEvent) => {
@@ -33,10 +47,10 @@ export default function WebScraper() {
         throw new Error('Failed to scrape website');
       }
 
-      const data = await response.json();
+      const data: ApiResult = await response.json();
       setResult(data);
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while scraping');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while scraping');
     } finally {
       setLoading(false);
     }
@@ -45,7 +59,6 @@ export default function WebScraper() {
   return (
     <div className="bg-slate-800 rounded-lg shadow-xl p-6">
       <form onSubmit={handleScrape} className="space-y-6">
-        {/* URL Input */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Website URL
@@ -60,7 +73,6 @@ export default function WebScraper() {
           />
         </div>
 
-        {/* Query Input */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             What would you like to extract?
@@ -75,7 +87,6 @@ export default function WebScraper() {
           />
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}
@@ -85,14 +96,12 @@ export default function WebScraper() {
         </button>
       </form>
 
-      {/* Error Display */}
       {error && (
         <div className="mt-6 p-4 bg-red-900/50 border border-red-500 rounded-lg text-red-200">
           {error}
         </div>
       )}
 
-      {/* Results */}
       {result && <ResultDisplay result={result} />}
     </div>
   );
